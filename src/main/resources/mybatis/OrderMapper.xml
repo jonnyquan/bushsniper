@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Order">
+
+	<insert id="insertOrder" parameterType="com.moon.bushsniper.bean.Order">
+		insert into
+		order_flow(id,order_type,user_id,variety,side,volume,stop_loss,stop_profit,gain,tech_line,predict_side,actual_side,operate_score,open_time,close_time,operate_detail,plan,introspection,m15_pic,m30_pic,h1_pic,h4_pic,d1_pic)
+		values(#{id},#{orderType},#{userId},#{variety},#{side},#{volume},#{stopLoss},#{stopProfit},#{gain},#{techLine},#{predictSide},#{actualSide},#{operateScore},#{openTime},#{closeTime},#{operateDetail},#{plan},#{introspection},#{m15Pic},#{m30Pic},#{h1Pic},#{h4Pic},#{d1Pic})
+	</insert>
+
+	<select id="selectOrder" parameterType="com.moon.bushsniper.bean.OrderQueryParam" resultType="com.moon.bushsniper.bean.Order">
+		select id,order_type as orderType,user_id as userId,variety,side,volume,stop_loss as stopLoss,stop_profit as stopProfit,gain,tech_line as
+			   techLine,predict_side as predictSide,actual_side as
+		       actualSide,operate_score as operateScore,open_time as
+		       openTime,close_time as closeTime,operate_detail as
+		       operateDetail,plan,introspection,m15_pic as m15Pic,m30_pic as m30Pic,
+		       h1_pic as h1Pic,h4_pic as h4Pic,d1_pic as d1Pic,
+		       (select sum(odf.gain) + o.gain from order_flow odf where odf.close_time &lt; o.open_time) as balance
+		from order_flow o
+		where 1 = 1
+		<if test="orderId !=null">
+			and id = #{orderId}
+		</if>
+		<if test="type !=null">
+			and order_type = #{type}
+		</if>
+		<if test="userId !=null">
+			and user_id = #{userId}
+		</if>
+		order by open_time desc
+	</select>
+	
+	<update id="updateOrder"  parameterType="com.moon.bushsniper.bean.Order">
+		update order_flow 
+		set
+			variety = #{variety},side = #{side},volume = #{volume},
+			stop_loss = #{stopLoss},stop_profit = #{stopProfit},
+			gain = #{gain},tech_line = #{techLine},predict_side = #{predictSide},
+			actual_side = #{actualSide},operate_score = #{operateScore},
+			open_time = #{openTime},close_time = #{closeTime},operate_detail = #{operateDetail},
+			plan = #{plan},introspection = #{introspection} 
+			<if test="m15Pic !=null">
+				,m15_pic = #{m15Pic}
+			</if>
+			<if test="m30Pic !=null">
+				,m30_pic = #{m30Pic}
+			</if>
+			<if test="h1Pic !=null">
+				,h1_pic = #{h1Pic}
+			</if>
+			<if test="h4Pic !=null">
+				,h4_pic = #{h4Pic}
+			</if>
+			<if test="d1Pic !=null">
+				,d1_pic = #{d1Pic}
+			</if>
+		where id = #{id}
+	</update>
+	
+	<select id="selectBalance" parameterType="java.util.Map" resultType="com.moon.bushsniper.bean.Order">
+		select o.order_type as orderType,o.gain,(select sum(odf.gain) + o.gain from order_flow odf where odf.close_time &lt; o.open_time) as balance
+		from order_flow o
+		where o.user_id = #{userId} and o.close_time &lt; #{time}
+		order by o.close_time desc limit 0,1
+	</select>
+	
+	<delete id="deleteOrder" parameterType="java.lang.String">
+		delete from order_flow where id = #{id}
+	</delete>
+
+</mapper>
